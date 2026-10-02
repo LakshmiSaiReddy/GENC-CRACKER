@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: preparation
+    description: GenC Next preparation workspace
 paths:
   /healthz:
     get:
@@ -24,6 +26,55 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /workspace:
+    get:
+      operationId: getWorkspace
+      tags: [preparation]
+      summary: Get the signed-in user's preparation workspace
+      responses:
+        "200":
+          description: Workspace progress and profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceState"
+        "401":
+          description: Sign-in required
+    put:
+      operationId: saveWorkspace
+      tags: [preparation]
+      summary: Save the signed-in user's preparation workspace
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkspaceStateInput"
+      responses:
+        "200":
+          description: Saved workspace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceState"
+        "400":
+          description: Invalid workspace state
+        "401":
+          description: Sign-in required
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [preparation]
+      summary: Get preparation dashboard metrics
+      responses:
+        "200":
+          description: Dashboard metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+        "401":
+          description: Sign-in required
 components:
   schemas:
     HealthStatus:
@@ -33,4 +84,188 @@ components:
           type: string
       required:
         - status
+    Profile:
+      type: object
+      properties:
+        studentName: { type: string }
+        course: { type: string }
+        institute: { type: string }
+        target: { type: string }
+        preparationWeeks: { type: integer, minimum: 1, maximum: 40 }
+      required: [studentName, course, institute, target, preparationWeeks]
+    ResourceProgress:
+      type: object
+      properties:
+        resourceId: { type: string }
+        visited: { type: boolean }
+        completed: { type: boolean }
+        lastOpenedAt: { type: ["string", "null"], format: date-time }
+      required: [resourceId, visited, completed, lastOpenedAt]
+    CodingProblem:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        platform: { type: string }
+        difficulty: { type: string, enum: [Easy, Medium, Hard] }
+        topic: { type: string }
+        url: { type: string }
+        status: { type: string, enum: [Solved, Attempted, Bookmarked] }
+        solvedDate: { type: ["string", "null"], format: date }
+        notes: { type: string }
+      required: [id, name, platform, difficulty, topic, url, status, solvedDate, notes]
+    SqlEntry:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        topic: { type: string }
+        completed: { type: boolean }
+        notes: { type: string }
+        completedAt: { type: ["string", "null"], format: date-time }
+      required: [id, title, topic, completed, notes, completedAt]
+    DailyTask:
+      type: object
+      properties:
+        id: { type: string }
+        week: { type: integer, minimum: 1, maximum: 40 }
+        day: { type: string }
+        title: { type: string }
+        durationMinutes: { type: integer, minimum: 0 }
+        completed: { type: boolean }
+        notes: { type: string }
+        scheduledDate: { type: ["string", "null"], format: date }
+      required: [id, week, day, title, durationMinutes, completed, notes, scheduledDate]
+    WeekNote:
+      type: object
+      properties:
+        week: { type: integer, minimum: 1, maximum: 40 }
+        content: { type: string }
+      required: [week, content]
+    ProjectMilestone:
+      type: object
+      properties:
+        projectId: { type: string }
+        milestoneId: { type: string }
+        completed: { type: boolean }
+      required: [projectId, milestoneId, completed]
+    MockTestRecord:
+      type: object
+      properties:
+        id: { type: string }
+        category: { type: string }
+        score: { type: integer, minimum: 0 }
+        total: { type: integer, minimum: 1 }
+        durationSeconds: { type: integer, minimum: 0 }
+        completedAt: { type: string, format: date-time }
+        incorrectTopics:
+          type: array
+          items: { type: string }
+      required: [id, category, score, total, durationSeconds, completedAt, incorrectTopics]
+    Certificate:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        issuer: { type: string }
+        completed: { type: boolean }
+        completedAt: { type: ["string", "null"], format: date }
+        url: { type: string }
+      required: [id, name, issuer, completed, completedAt, url]
+    InterviewAnswer:
+      type: object
+      properties:
+        id: { type: string }
+        prompt: { type: string }
+        answer: { type: string }
+        section: { type: string }
+      required: [id, prompt, answer, section]
+    WorkspaceState:
+      type: object
+      properties:
+        profile: { $ref: "#/components/schemas/Profile" }
+        completedTopics:
+          type: array
+          items: { type: string }
+        completedWeeks:
+          type: array
+          items: { type: integer, minimum: 1, maximum: 40 }
+        resourceProgress:
+          type: array
+          items: { $ref: "#/components/schemas/ResourceProgress" }
+        codingProblems:
+          type: array
+          items: { $ref: "#/components/schemas/CodingProblem" }
+        sqlEntries:
+          type: array
+          items: { $ref: "#/components/schemas/SqlEntry" }
+        dailyTasks:
+          type: array
+          items: { $ref: "#/components/schemas/DailyTask" }
+        weekNotes:
+          type: array
+          items: { $ref: "#/components/schemas/WeekNote" }
+        projectMilestones:
+          type: array
+          items: { $ref: "#/components/schemas/ProjectMilestone" }
+        mockTests:
+          type: array
+          items: { $ref: "#/components/schemas/MockTestRecord" }
+        certificates:
+          type: array
+          items: { $ref: "#/components/schemas/Certificate" }
+        interviewAnswers:
+          type: array
+          items: { $ref: "#/components/schemas/InterviewAnswer" }
+      required:
+        - profile
+        - completedTopics
+        - completedWeeks
+        - resourceProgress
+        - codingProblems
+        - sqlEntries
+        - dailyTasks
+        - weekNotes
+        - projectMilestones
+        - mockTests
+        - certificates
+        - interviewAnswers
+    WorkspaceStateInput:
+      allOf:
+        - $ref: "#/components/schemas/WorkspaceState"
+    DashboardSummary:
+      type: object
+      properties:
+        overallProgress: { type: number, minimum: 0, maximum: 100 }
+        currentWeek: { type: integer, minimum: 1, maximum: 40 }
+        currentPhase: { type: string }
+        completedWeeks: { type: integer, minimum: 0, maximum: 40 }
+        pendingTasks: { type: integer, minimum: 0 }
+        codingSolved: { type: integer, minimum: 0 }
+        sqlSolved: { type: integer, minimum: 0 }
+        projectsCompleted: { type: integer, minimum: 0 }
+        mockTestsCompleted: { type: integer, minimum: 0 }
+        interviewReadiness: { type: number, minimum: 0, maximum: 100 }
+        certificateStatus: { type: string }
+        skillProgress:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              percentage: { type: number, minimum: 0, maximum: 100 }
+            required: [name, percentage]
+      required:
+        - overallProgress
+        - currentWeek
+        - currentPhase
+        - completedWeeks
+        - pendingTasks
+        - codingSolved
+        - sqlSolved
+        - projectsCompleted
+        - mockTestsCompleted
+        - interviewReadiness
+        - certificateStatus
+        - skillProgress
 

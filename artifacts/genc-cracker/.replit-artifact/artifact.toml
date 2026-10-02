@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "GENC CRACKER"
+description = "A personalized 40-week Cognizant GenC Next preparation platform for a cybersecurity student, with an interactive roadmap, weekly checklists, resource tracking, coding and SQL practice, mock tests, interview prep, and progress tracking."
+version = "1.0.0"
+id = "artifacts/genc-cracker"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25665
+
+[services.development]
+run = "pnpm --filter @workspace/genc-cracker run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/genc-cracker", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/genc-cracker/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25665"
+BASE_PATH = "/"
