@@ -1,0 +1,1 @@
+- [Workspace persistence schema parity](workspace-persistence.md) — keep Prisma and Drizzle aligned because post-merge setup still runs Drizzle push.

@@ -58,14 +58,18 @@ function createDefaultWorkspace(): WorkspaceState {
       },
     ],
     interviewAnswers: [
-      { id: "self-introduction", prompt: "Tell me about yourself.", answer: "", section: "HR" },
-      { id: "why-cognizant", prompt: "Why Cognizant?", answer: "", section: "HR" },
-      { id: "why-cybersecurity", prompt: "Why cybersecurity?", answer: "", section: "HR" },
-      { id: "strengths", prompt: "What are your strengths?", answer: "", section: "HR" },
-      { id: "weaknesses", prompt: "What is one area you are improving?", answer: "", section: "HR" },
-      { id: "career-goals", prompt: "What are your career goals?", answer: "", section: "HR" },
-      { id: "password-checker-project", prompt: "Explain your Password Strength Checker.", answer: "", section: "Project" },
-      { id: "cloud-monitoring-project", prompt: "Explain your Cloud Security Monitoring System.", answer: "", section: "Project" },
+      { id: "self-introduction", prompt: "Introduce yourself in one minute and explain what brought you to cybersecurity.", answer: "", section: "HR & behavioral" },
+      { id: "why-cognizant", prompt: "Why are you interested in Cognizant and the GenC Next role?", answer: "", section: "HR & behavioral" },
+      { id: "why-cybersecurity", prompt: "Why did you choose cybersecurity, and what part of it interests you most?", answer: "", section: "HR & behavioral" },
+      { id: "strengths", prompt: "What are your strengths? Give a specific example.", answer: "", section: "HR & behavioral" },
+      { id: "weaknesses", prompt: "What is one area you are improving, and what are you doing about it?", answer: "", section: "HR & behavioral" },
+      { id: "career-goals", prompt: "What are your career goals for the next few years?", answer: "", section: "HR & behavioral" },
+      { id: "python-dsa", prompt: "Explain a Python or DSA problem you solved, including your approach and complexity.", answer: "", section: "Technical foundations" },
+      { id: "sql-dbms", prompt: "Explain how you would use SQL joins and describe one DBMS concept such as normalization or ACID.", answer: "", section: "Technical foundations" },
+      { id: "core-cs-networks", prompt: "Explain one OS concept and how a web request travels through a network.", answer: "", section: "Technical foundations" },
+      { id: "cyber-cloud", prompt: "Describe a web-security risk and one cloud control that helps reduce it.", answer: "", section: "Cybersecurity & cloud" },
+      { id: "password-checker-project", prompt: "Explain your Password Strength Checker, its design choices, tests, and limitations.", answer: "", section: "Project stories" },
+      { id: "cloud-monitoring-project", prompt: "Explain your Cloud Security Monitoring System and how it detects or reports security events.", answer: "", section: "Project stories" },
     ],
   });
 }
@@ -197,17 +201,21 @@ router.get("/dashboard", async (req, res): Promise<void> => {
     };
   });
 
+  const projectIds = new Set([
+    "password-strength-checker",
+    "cloud-security-monitoring-system",
+  ]);
   const projectCounts = new Map<string, number>();
   for (const milestone of state.projectMilestones) {
-    if (milestone.completed) {
+    if (milestone.completed && projectIds.has(milestone.projectId)) {
       projectCounts.set(
         milestone.projectId,
         (projectCounts.get(milestone.projectId) ?? 0) + 1,
       );
     }
   }
-  const projectsCompleted = [...projectCounts.values()].filter(
-    (count) => count >= 4,
+  const projectsCompleted = [...projectIds].filter(
+    (projectId) => (projectCounts.get(projectId) ?? 0) >= 4,
   ).length;
   const answered = state.interviewAnswers.filter(
     (answer) => answer.answer.trim().length > 0,
